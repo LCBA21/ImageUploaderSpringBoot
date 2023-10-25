@@ -22,5 +22,48 @@ import java.util.List;
 
 @Controller
 public class ClientController {
+
+   @Autowired
+    private ImageService imageService;
+
+
+    // display image
+    @GetMapping("/display")
+    public ResponseEntity<byte[]> displayImage(@RequestParam("id") long id) throws IOException, SQLException
+    {
+        Image image = imageService.viewById(id);
+        byte [] imageBytes = null;
+        imageBytes = image.getImage().getBytes(1,(int) image.getImage().length());
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(imageBytes);
+    }
+
+    // view All images
+    @GetMapping("/")
+    public ModelAndView home(){
+        ModelAndView mv = new ModelAndView("index");
+        List<Image> imageList = imageService.viewAll();
+        mv.addObject("imageList", imageList);
+        return mv;
+    }
+
+    // add image - get
+    @GetMapping("/add")
+    public ModelAndView addImage(){
+        return new ModelAndView("addimage");
+    }
+
+    // add image - post
+    @PostMapping("/add")
+    public String addImagePost(HttpServletRequest request, @RequestParam("image") MultipartFile file) throws IOException, SerialException, SQLException
+    {
+        byte[] bytes = file.getBytes();
+        Blob blob = new javax.sql.rowset.serial.SerialBlob(bytes);
+
+        Image image = new Image();
+        image.setImage(blob);
+        imageService.create(image);
+        return "redirect:/";
+    }
+ 
  
 }
